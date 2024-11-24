@@ -1,4 +1,8 @@
 
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
+using medLab.Repositories;
+
 namespace medLab
 {
     public class Program
@@ -7,10 +11,22 @@ namespace medLab
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Load AWS configuration from appsettings.json
+            var awsOptions = builder.Configuration.GetAWSOptions();
+            builder.Services.AddDefaultAWSOptions(awsOptions);
+            builder.Services.AddAWSService<IAmazonDynamoDB>();
+            builder.Services.AddScoped<IDynamoDBContext, DynamoDBContext>();
+
+
+            // Add AutoMapper
+            builder.Services.AddAutoMapper(typeof(LabProfile)); // Registering the LabProfile for AutoMapper
+
+            // Add the repository
+            builder.Services.AddScoped<ILabRepository, LabRepository>();
+
             // Add services to the container.
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
