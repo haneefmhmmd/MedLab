@@ -30,11 +30,6 @@ node_modules/
 *.snupkg
 *.nuspec
 
-# Ignore app settings (especially if sensitive data like secrets)
-appsettings.json
-appsettings.*.json
-# You may want to manually manage sensitive files (e.g., appsettings.Development.json) with a secret management solution or environment variables.
-
 # Ignore IIS express config (if applicable)
 .IISExpress/
 
