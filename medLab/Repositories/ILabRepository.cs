@@ -10,6 +10,7 @@ namespace medLab.Repositories
         Task<Labs> AddAsync(Labs lab);
         Task<Labs> UpdateAsync(Labs lab);
         Task<bool> DeleteAsync(string labId);
+        Task<Labs> GetByEmailAsync(string email);
         Task CreateAndSaveLabs();
     }
 }

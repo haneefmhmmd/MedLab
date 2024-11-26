@@ -8,13 +8,14 @@ namespace medLab.Models
     {
         [DynamoDBHashKey("labId")] 
         public string LabId { get; set; } = "0";
-
         [DynamoDBProperty("labAddress")]
         public string LabAddress { get; set; } = string.Empty;
-
+        [DynamoDBProperty("labEmail")]
+        public string LabEmail { get; set; } = string.Empty;
         [DynamoDBProperty("labName")]
         public string LabName { get; set; } = string.Empty;
-
+        [DynamoDBProperty("passwordHash")]
+        public string PasswordHash { get; set; } = string.Empty;
         [DynamoDBProperty("reports")]
         public List<Report> Reports { get; set; } = new List<Report>();
 

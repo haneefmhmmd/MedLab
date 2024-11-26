@@ -13,6 +13,8 @@ namespace medLab
             // Mapping for Labs <-> LabsDTO
             CreateMap<LabsDTO, Labs>()
                 .ForMember(dest => dest.LabId, opt => opt.MapFrom(src => src.LabId))
+                .ForMember(dest => dest.LabEmail, opt => opt.MapFrom(src => src.LabEmail))
+                .ForMember(dest => dest.PasswordHash, opt => opt.MapFrom(src => src.PasswordHash))
                 .ForMember(dest => dest.LabAddress, opt => opt.MapFrom(src => src.LabAddress))
                 .ForMember(dest => dest.LabName, opt => opt.MapFrom(src => src.LabName))
                 .ForMember(dest => dest.Reports, opt => opt.MapFrom(src => src.Reports))
@@ -33,6 +35,17 @@ namespace medLab
                 .ForMember(dest => dest.TestName, opt => opt.MapFrom(src => src.TestName))
                 .ForMember(dest => dest.TestValue, opt => opt.MapFrom(src => src.TestValue))
                 .ReverseMap();
+
+
+            CreateMap<RegistrationDTO, Labs>()
+                .ForMember(dest => dest.LabId, opt => opt.MapFrom(src => src.LabId))
+                .ForMember(dest => dest.LabEmail, opt => opt.MapFrom(src => src.LabEmail))
+                .ForMember(dest => dest.PasswordHash, opt => opt.MapFrom(src => src.PasswordHash))
+                .ForMember(dest => dest.LabAddress, opt => opt.MapFrom(src => src.LabAddress))
+                .ForMember(dest => dest.LabName, opt => opt.MapFrom(src => src.LabName))
+                .ReverseMap();
+
+
         }
     }
 }

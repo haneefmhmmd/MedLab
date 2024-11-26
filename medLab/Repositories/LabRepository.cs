@@ -136,6 +136,19 @@ namespace medLab.Repositories
             }
         }
 
+
+        public async Task<Labs> GetByEmailAsync(string email)
+        {
+            var search = _context.ScanAsync<Labs>(new List<ScanCondition>
+            {
+                new ScanCondition(nameof(Labs.LabEmail), Amazon.DynamoDBv2.DocumentModel.ScanOperator.Equal, email)
+            });
+
+            var result = await search.GetRemainingAsync();
+            return result.FirstOrDefault(); // Return the first matching record or null
+        }
+
+
         public async Task<Report?> GetReportAsync(string labId, string reportId)
         {
             var lab = await GetByIdAsync(labId);
@@ -182,6 +195,8 @@ namespace medLab.Repositories
             var lab = new Labs
             {
                 LabId = Guid.NewGuid().ToString(), // Generate unique LabId
+                LabEmail = "",
+                PasswordHash = "",
                 LabName = "Central Lab",
                 LabAddress = "123 Main St, Cityville",
                 Reports = new List<Report>
