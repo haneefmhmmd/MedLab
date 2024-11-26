@@ -63,6 +63,8 @@ namespace medLab.Controllers
         public async Task<ActionResult<LabsDTO>> Post([FromBody] LabsDTO labDto)
         {
             var lab = _mapper.Map<Labs>(labDto);
+            lab.LabId = Guid.NewGuid().ToString(); 
+
             var createdLab = await _repository.AddAsync(lab);
 
             var createdLabDto = _mapper.Map<LabsDTO>(createdLab);

@@ -136,52 +136,86 @@ namespace medLab.Repositories
             }
         }
 
+        public async Task<Report?> GetReportAsync(string labId, string reportId)
+        {
+            var lab = await GetByIdAsync(labId);
+            return lab?.Reports.FirstOrDefault(r => r.ReportId == reportId);
+        }
+
+        public async Task AddReportAsync(string labId, Report report)
+        {
+            var lab = await GetByIdAsync(labId);
+            if (lab != null)
+            {
+                report.ReportId = Guid.NewGuid().ToString(); // Ensure a unique ID for the new report
+                lab.Reports.Add(report);
+                await UpdateAsync(lab);
+            }
+        }
+
+        public async Task UpdateReportAsync(string labId, Report updatedReport)
+        {
+            var lab = await GetByIdAsync(labId);
+            if (lab != null)
+            {
+                var index = lab.Reports.FindIndex(r => r.ReportId == updatedReport.ReportId);
+                if (index != -1)
+                {
+                    lab.Reports[index] = updatedReport;
+                    await UpdateAsync(lab);
+                }
+            }
+        }
+
+        public async Task DeleteReportAsync(string labId, string reportId)
+        {
+            var lab = await GetByIdAsync(labId);
+            if (lab != null)
+            {
+                lab.Reports.RemoveAll(r => r.ReportId == reportId);
+                await UpdateAsync(lab);
+            }
+        }
 
         public async Task CreateAndSaveLabs()
         {
-            var labsList = new List<Labs>
+            var lab = new Labs
             {
-                new Labs
+                LabId = Guid.NewGuid().ToString(), // Generate unique LabId
+                LabName = "Central Lab",
+                LabAddress = "123 Main St, Cityville",
+                Reports = new List<Report>
+        {
+            new Report
+            {
+                ReportId = Guid.NewGuid().ToString(), // Generate unique ReportId
+                Age = 45,
+                DateOfTest = DateTime.Now.ToString("yyyy-MM-dd"),
+                Gender = "Female",
+                PatientName = "Jane Doe",
+                Tests = new List<Test>
                 {
-                    LabId = "1", // Ensure you have a proper labId
-                    LabName = "Central Lab",
-                    LabAddress = "123 Main St, Cityville",
-                    Reports = new Report
-                    {
-                        Age = 45,
-                        DateOfTest = DateTime.Now.ToString("yyyy-MM-dd"),
-                        Gender = "Female",
-                        PatientName = "Jane Doe",
-                        Tests = new List<Test>
-                        {
-                            new Test { TestName = "Blood Test", TestValue = "Normal" },
-                            new Test { TestName = "X-Ray", TestValue = "Clear" }
-                        }
-                    }
-                },
-                new Labs
-                {
-                    LabId = "2", // Ensure you have a proper labId
-                    LabName = "Northside Lab",
-                    LabAddress = "456 North St, Townsville",
-                    Reports = new Report
-                    {
-                        Age = 30,
-                        DateOfTest = DateTime.Now.ToString("yyyy-MM-dd"),
-                        Gender = "Male",
-                        PatientName = "John Smith",
-                        Tests = new List<Test>
-                        {
-                            new Test { TestName = "Blood Test", TestValue = "Low Iron" },
-                            new Test { TestName = "CT Scan", TestValue = "Abnormal" }
-                        }
-                    }
+                    new Test { TestName = "Blood Test", TestValue = "Normal" },
+                    new Test { TestName = "X-Ray", TestValue = "Clear" }
                 }
+            },
+            new Report
+            {
+                ReportId = Guid.NewGuid().ToString(), // Another unique ReportId
+                Age = 50,
+                DateOfTest = DateTime.Now.ToString("yyyy-MM-dd"),
+                Gender = "Male",
+                PatientName = "John Doe",
+                Tests = new List<Test>
+                {
+                    new Test { TestName = "MRI", TestValue = "Normal" }
+                }
+            }
+        }
             };
 
-            foreach (var lab in labsList)
+            try
             {
-                // Ensure you're adding them properly to the database
                 var addedLab = await AddAsync(lab);
                 if (addedLab != null)
                 {
@@ -192,7 +226,12 @@ namespace medLab.Repositories
                     _logger.LogError($"Failed to add lab: {lab.LabName}");
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception while adding lab {lab.LabName}: {ex.Message}");
+            }
         }
+
 
 
 

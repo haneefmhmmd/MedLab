@@ -16,11 +16,15 @@ namespace medLab.Models
         public string LabName { get; set; } = string.Empty;
 
         [DynamoDBProperty("reports")]
-        public Report Reports { get; set; } = new Report();
+        public List<Report> Reports { get; set; } = new List<Report>();
+
     }
 
     public class Report
     {
+        [DynamoDBProperty("reportId")]
+        public string ReportId { get; set; } = Guid.NewGuid().ToString(); // Unique identifier
+
         [DynamoDBProperty("age")]
         public int Age { get; set; } = 0;
 

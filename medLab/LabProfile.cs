@@ -10,43 +10,29 @@ namespace medLab
     {
         public LabProfile()
         {
-            // Mapping from LabsDTO to Labs
+            // Mapping for Labs <-> LabsDTO
             CreateMap<LabsDTO, Labs>()
                 .ForMember(dest => dest.LabId, opt => opt.MapFrom(src => src.LabId))
                 .ForMember(dest => dest.LabAddress, opt => opt.MapFrom(src => src.LabAddress))
                 .ForMember(dest => dest.LabName, opt => opt.MapFrom(src => src.LabName))
-                .ForMember(dest => dest.Reports, opt => opt.MapFrom(src => src.Reports));
+                .ForMember(dest => dest.Reports, opt => opt.MapFrom(src => src.Reports))
+                .ReverseMap();
 
-            // Mapping from Labs to LabsDTO (if needed)
-            CreateMap<Labs, LabsDTO>()
-                .ForMember(dest => dest.LabId, opt => opt.MapFrom(src => src.LabId))
-                .ForMember(dest => dest.LabAddress, opt => opt.MapFrom(src => src.LabAddress))
-                .ForMember(dest => dest.LabName, opt => opt.MapFrom(src => src.LabName))
-                .ForMember(dest => dest.Reports, opt => opt.MapFrom(src => src.Reports));
-
-            // Mapping for the nested Report
+            // Mapping for Report <-> ReportDTO
             CreateMap<ReportDTO, Report>()
+                .ForMember(dest => dest.ReportId, opt => opt.MapFrom(src => src.ReportId))
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.Age))
                 .ForMember(dest => dest.DateOfTest, opt => opt.MapFrom(src => src.DateOfTest))
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
                 .ForMember(dest => dest.PatientName, opt => opt.MapFrom(src => src.PatientName))
-                .ForMember(dest => dest.Tests, opt => opt.MapFrom(src => src.Tests));
+                .ForMember(dest => dest.Tests, opt => opt.MapFrom(src => src.Tests))
+                .ReverseMap();
 
-            CreateMap<Report, ReportDTO>()
-                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.Age))
-                .ForMember(dest => dest.DateOfTest, opt => opt.MapFrom(src => src.DateOfTest))
-                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
-                .ForMember(dest => dest.PatientName, opt => opt.MapFrom(src => src.PatientName))
-                .ForMember(dest => dest.Tests, opt => opt.MapFrom(src => src.Tests));
-
-            // Mapping for the nested Test
+            // Mapping for Test <-> TestDTO
             CreateMap<TestDTO, Test>()
                 .ForMember(dest => dest.TestName, opt => opt.MapFrom(src => src.TestName))
-                .ForMember(dest => dest.TestValue, opt => opt.MapFrom(src => src.TestValue));
-
-            CreateMap<Test, TestDTO>()
-                .ForMember(dest => dest.TestName, opt => opt.MapFrom(src => src.TestName))
-                .ForMember(dest => dest.TestValue, opt => opt.MapFrom(src => src.TestValue));
+                .ForMember(dest => dest.TestValue, opt => opt.MapFrom(src => src.TestValue))
+                .ReverseMap();
         }
     }
 }
