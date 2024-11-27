@@ -34,4 +34,10 @@
         public string LabAddress { get; set; }
         public string LabName { get; set; }
     }
+
+    public class LoginDTO
+    {
+        public string LabEmail { get; set; }
+        public string PasswordHash { get; set; }
+    }
 }

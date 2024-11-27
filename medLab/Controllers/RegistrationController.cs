@@ -11,7 +11,7 @@ using Org.BouncyCastle.Crypto.Generators;
 namespace medLab.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/")]
     public class RegistrationController : ControllerBase
     {
         private readonly ILabRepository _labRepository;
@@ -28,6 +28,7 @@ namespace medLab.Controllers
 
 
         [HttpPost]
+        [Route("Registration")]
         public async Task<IActionResult> Register([FromBody] RegistrationDTO registrationDto)
         {
             if (!ModelState.IsValid)
@@ -74,29 +75,48 @@ namespace medLab.Controllers
             }
         }
 
-        [HttpGet("{email}")]
-        public async Task<IActionResult> GetLabByEmail(string email)
+
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
         {
-            if (string.IsNullOrEmpty(email))
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Email is required.");
+                _logger.LogWarning("Invalid login request received.");
+                return BadRequest(ModelState);
             }
 
             try
             {
-                var lab = await _labRepository.GetByEmailAsync(email);
+                // Fetch the lab by email
+                var lab = await _labRepository.GetByEmailAsync(loginDto.LabEmail);
                 if (lab == null)
                 {
-                    _logger.LogWarning($"Lab with email {email} not found.");
-                    return NotFound($"Lab with email {email} not found.");
+                    _logger.LogWarning($"Login failed for {loginDto.LabEmail}: User not found.");
+                    return Unauthorized("Invalid email or password.");
                 }
 
-                var labDto = _mapper.Map<LabsDTO>(lab);
-                return Ok(labDto);
+                // Verify the password
+                if (!BCrypt.Net.BCrypt.EnhancedVerify(loginDto.PasswordHash, lab.PasswordHash))
+                {
+                    _logger.LogWarning($"Login failed for {loginDto.LabEmail}: Invalid password.");
+                    return Unauthorized("Invalid email or password.");
+                }
+
+                _logger.LogInformation($"Login successful for {loginDto.LabEmail}.");
+
+                // Optionally, generate a token or return basic user details
+                var response = new
+                {
+                    LabId = lab.LabId,
+                    LabEmail = lab.LabEmail,
+                    LabName = lab.LabName
+                };
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while retrieving the lab.");
+                _logger.LogError(ex, "An error occurred during login.");
                 return StatusCode(500, "An internal server error occurred.");
             }
         }
