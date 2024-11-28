@@ -3,6 +3,7 @@ using medLab.Models;
 using medLab.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;  // Import IConfiguration
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
@@ -18,12 +19,15 @@ namespace medLab.Controllers
         private readonly ILabRepository _labRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<RegistrationController> _logger;
+        private readonly IConfiguration _configuration; // Add IConfiguration dependency
 
-        public RegistrationController(ILabRepository labRepository, IMapper mapper, ILogger<RegistrationController> logger)
+        // Inject IConfiguration
+        public RegistrationController(ILabRepository labRepository, IMapper mapper, ILogger<RegistrationController> logger, IConfiguration configuration)
         {
             _labRepository = labRepository;
             _mapper = mapper;
             _logger = logger;
+            _configuration = configuration; // Initialize IConfiguration
         }
 
         [HttpPost]
@@ -101,9 +105,12 @@ namespace medLab.Controllers
 
                 _logger.LogInformation($"Login successful for {loginDto.LabEmail}.");
 
+                // Get the secret key from appsettings.json
+                var secretKey = _configuration.GetValue<string>("JwtSettings:SecretKey");
+
                 // Generate JWT Token
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.UTF8.GetBytes("YourSuperSecretKey"); // Replace with your secret key
+                var key = Encoding.UTF8.GetBytes(secretKey); // Use the key from the appsettings.json file
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new System.Security.Claims.ClaimsIdentity(new[]
@@ -112,8 +119,8 @@ namespace medLab.Controllers
                         new System.Security.Claims.Claim("LabEmail", lab.LabEmail)
                     }),
                     Expires = DateTime.UtcNow.AddHours(1),
-                    Issuer = "medLab",
-                    Audience = "medLabUsers",
+                    Issuer = _configuration.GetValue<string>("JwtSettings:Issuer"),
+                    Audience = _configuration.GetValue<string>("JwtSettings:Audience"),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
 
