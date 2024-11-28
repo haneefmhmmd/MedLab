@@ -1,6 +1,6 @@
 @medLab_HostAddress = http://localhost:5171
 
-GET {{medLab_HostAddress}}/weatherforecast/
+GET {{medLab_HostAddress}}/api
 Accept: application/json
 
 ###
