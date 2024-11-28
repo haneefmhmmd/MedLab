@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace medLab.Controllers
 {
     [ApiController]
-    [Route("report")]
+    [Route("api/report")]
     [Authorize]
     public class ReportsController : ControllerBase
     {
