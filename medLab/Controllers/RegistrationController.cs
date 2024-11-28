@@ -3,10 +3,12 @@ using medLab.Models;
 using medLab.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;  // Import IConfiguration
+using Microsoft.IdentityModel.Tokens;
 using System;
-using BCrypt.Net;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using System.Threading.Tasks;
-using Org.BouncyCastle.Crypto.Generators;
 
 namespace medLab.Controllers
 {
@@ -17,15 +19,16 @@ namespace medLab.Controllers
         private readonly ILabRepository _labRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<RegistrationController> _logger;
+        private readonly IConfiguration _configuration; // Add IConfiguration dependency
 
-        public RegistrationController(ILabRepository labRepository, IMapper mapper, ILogger<RegistrationController> logger)
+        // Inject IConfiguration
+        public RegistrationController(ILabRepository labRepository, IMapper mapper, ILogger<RegistrationController> logger, IConfiguration configuration)
         {
             _labRepository = labRepository;
             _mapper = mapper;
             _logger = logger;
+            _configuration = configuration; // Initialize IConfiguration
         }
-
-
 
         [HttpPost]
         [Route("Registration")]
@@ -46,7 +49,6 @@ namespace medLab.Controllers
 
             var lab = _mapper.Map<Labs>(registrationDto);
             lab.PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(registrationDto.PasswordHash);
-
             lab.LabId = Guid.NewGuid().ToString();
 
             try
@@ -74,7 +76,6 @@ namespace medLab.Controllers
                 return StatusCode(500, "An internal server error occurred.");
             }
         }
-
 
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
@@ -104,15 +105,35 @@ namespace medLab.Controllers
 
                 _logger.LogInformation($"Login successful for {loginDto.LabEmail}.");
 
-                // Optionally, generate a token or return basic user details
-                var response = new
+                // Get the secret key from appsettings.json
+                var secretKey = _configuration.GetValue<string>("JwtSettings:SecretKey");
+
+                // Generate JWT Token
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes(secretKey); // Use the key from the appsettings.json file
+                var tokenDescriptor = new SecurityTokenDescriptor
                 {
+                    Subject = new System.Security.Claims.ClaimsIdentity(new[]
+                    {
+                        new System.Security.Claims.Claim("LabId", lab.LabId),
+                        new System.Security.Claims.Claim("LabEmail", lab.LabEmail)
+                    }),
+                    Expires = DateTime.UtcNow.AddHours(1),
+                    Issuer = _configuration.GetValue<string>("JwtSettings:Issuer"),
+                    Audience = _configuration.GetValue<string>("JwtSettings:Audience"),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                };
+
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenString = tokenHandler.WriteToken(token);
+
+                return Ok(new
+                {
+                    Token = tokenString,
                     LabId = lab.LabId,
                     LabEmail = lab.LabEmail,
                     LabName = lab.LabName
-                };
-
-                return Ok(response);
+                });
             }
             catch (Exception ex)
             {
@@ -120,6 +141,5 @@ namespace medLab.Controllers
                 return StatusCode(500, "An internal server error occurred.");
             }
         }
-
     }
 }

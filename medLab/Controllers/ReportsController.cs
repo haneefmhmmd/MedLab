@@ -6,11 +6,13 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace medLab.Controllers
 {
     [ApiController]
     [Route("report")]
+    [Authorize]
     public class ReportsController : ControllerBase
     {
         private readonly ILabRepository _labRepository;
