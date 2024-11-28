@@ -29,7 +29,7 @@ namespace medLab.Controllers
                 await _repository.CreateAndSaveLabs();  // Ensure the labs are initialized here
 
             };
-            
+
         }
 
         [HttpGet]
@@ -63,7 +63,7 @@ namespace medLab.Controllers
         public async Task<ActionResult<LabsDTO>> Post([FromBody] LabsDTO labDto)
         {
             var lab = _mapper.Map<Labs>(labDto);
-            lab.LabId = Guid.NewGuid().ToString(); 
+            lab.LabId = Guid.NewGuid().ToString();
 
             var createdLab = await _repository.AddAsync(lab);
 

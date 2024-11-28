@@ -63,6 +63,29 @@ namespace medLab.Controllers
             return CreatedAtAction(nameof(GetReportsForLab), new { labId }, savedReportDto);
         }
 
+        // GET: /report/{labId}/{reportId}
+        [HttpGet("{labId}/{reportId}")]
+        public async Task<IActionResult> GetReportById(string labId, string reportId)
+        {
+            var lab = await _labRepository.GetByIdAsync(labId);
+            if (lab == null)
+            {
+                _logger.LogWarning($"Lab with ID {labId} not found.");
+                return NotFound($"Lab with ID {labId} not found.");
+            }
+
+            var report = lab.Reports.FirstOrDefault(r => r.ReportId == reportId);
+            if (report == null)
+            {
+                _logger.LogWarning($"Report with ID {reportId} not found in Lab ID {labId}.");
+                return NotFound($"Report with ID {reportId} not found in Lab ID {labId}.");
+            }
+
+            var reportDto = _mapper.Map<ReportDTO>(report);
+            return Ok(reportDto);
+        }
+
+
         // PUT: /report/{labId}/{reportId}
         [HttpPut("{labId}/{reportId}")]
         public async Task<IActionResult> UpdateReportInLab(string labId, string reportId, [FromBody] ReportDTO reportDto)
