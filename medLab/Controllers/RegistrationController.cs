@@ -62,9 +62,6 @@ namespace medLab.Controllers
                 var responseDto = new LabsDTO
                 {
                     LabId = createdLab.LabId,
-                    LabEmail = createdLab.LabEmail,
-                    PasswordHash = createdLab.PasswordHash,
-                    LabAddress = createdLab.LabAddress,
                     LabName = createdLab.LabName
                 };
 

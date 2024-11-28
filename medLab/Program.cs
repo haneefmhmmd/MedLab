@@ -27,25 +27,19 @@ namespace medLab
             // Add the repository
             builder.Services.AddScoped<ILabRepository, LabRepository>();
 
-            // Access the secret key and other JWT settings from appsettings.json
-            var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-            var secretKey = jwtSettings.GetValue<string>("SecretKey");
+            // Configure JWT authentication
+            ConfigureAuthentication(builder);
 
-            // Add authentication services
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+            // Add CORS policy
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigins", builder =>
                 {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = jwtSettings.GetValue<string>("Issuer"),
-                        ValidAudience = jwtSettings.GetValue<string>("Audience"),
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)) // Use the secret key from appsettings
-                    };
+                    builder.WithOrigins("http://localhost:3000") // Replace with actual allowed origins
+                           .AllowAnyHeader()
+                           .AllowAnyMethod();
                 });
+            });
 
             // Add services to the container
             builder.Services.AddControllers();
@@ -54,7 +48,6 @@ namespace medLab
             // Add Swagger services
             builder.Services.AddSwaggerGen(c =>
             {
-                // Define the BearerAuth security scheme
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
@@ -65,7 +58,6 @@ namespace medLab
                     Description = "Enter 'Bearer' followed by your token."
                 });
 
-                // Add security requirement
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
@@ -85,20 +77,58 @@ namespace medLab
             var app = builder.Build();
 
             // Configure the HTTP request pipeline
+            ConfigureMiddleware(app);
+
+            app.Run();
+        }
+
+        private static void ConfigureAuthentication(WebApplicationBuilder builder)
+        {
+            var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+            var secretKey = jwtSettings.GetValue<string>("SecretKey");
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = jwtSettings.GetValue<string>("Issuer"),
+                        ValidAudience = jwtSettings.GetValue<string>("Audience"),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+                    };
+                });
+        }
+
+        private static void ConfigureMiddleware(WebApplication app)
+        {
+            // Use Swagger only in development
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            else
+            {
+                // Use global exception handling for production
+                app.UseExceptionHandler("/Error");
+                app.UseHsts();
+            }
 
             app.UseHttpsRedirection();
 
-            app.UseAuthentication(); // Enable authentication middleware
+            // Enable CORS
+            app.UseCors("AllowSpecificOrigins");
+
+            // Enable authentication and authorization middleware
+            app.UseAuthentication();
             app.UseAuthorization();
 
+            // Map controllers
             app.MapControllers();
-
-            app.Run();
         }
     }
 }
