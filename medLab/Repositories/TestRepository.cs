@@ -26,6 +26,12 @@ namespace medLab.Repositories
             return labTests?.Tests?.Find(t => t.Id == testId);
         }
 
+        public async Task SaveLabTestsAsync(LabTests labTests)
+        {
+            await _context.SaveAsync(labTests);
+        }
+
+
         public async Task AddTestAsync(string labId, LabTest test)
         {
             var labTests = await GetTestsByLabIdAsync(labId) ?? new LabTests { LabId = labId };

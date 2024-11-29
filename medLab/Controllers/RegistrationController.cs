@@ -138,5 +138,7 @@ namespace medLab.Controllers
                 return StatusCode(500, "An internal server error occurred.");
             }
         }
+
+
     }
 }

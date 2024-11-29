@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using medLab.Models;
 using medLab.Repositories;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -95,5 +96,56 @@ namespace medLab.Controllers
 
             return NoContent();
         }
+
+        [HttpPatch("{labId}")]
+        public async Task<IActionResult> UpdateLabWithPatch(string labId, [FromBody] JsonPatchDocument<LabsDTO> patchDocument)
+        {
+            // Step 1: Fetch the lab by ID
+            var lab = await _repository.GetByIdAsync(labId);
+            if (lab == null)
+            {
+                return NotFound($"Lab with ID {labId} not found.");
+            }
+
+            // Step 2: Map the current lab details to a DTO (Data Transfer Object)
+            var labDetailsDTO = _mapper.Map<LabsDTO>(lab);
+
+            // Step 3: Apply the patch document to the DTO
+            patchDocument.ApplyTo(labDetailsDTO);
+
+            // Step 4: Validate the patched DTO
+            if (!TryValidateModel(labDetailsDTO))
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Step 5: Apply the changes back to the lab object
+            if (!string.IsNullOrEmpty(labDetailsDTO.LabName))
+            {
+                lab.LabName = labDetailsDTO.LabName;
+            }
+            if (!string.IsNullOrEmpty(labDetailsDTO.LabEmail))
+            {
+                lab.LabEmail = labDetailsDTO.LabEmail;
+            }
+            if (!string.IsNullOrEmpty(labDetailsDTO.LabAddress))
+            {
+                lab.LabAddress = labDetailsDTO.LabAddress;
+            }
+            // Password should not be updated via patch for security reasons, unless handled separately (e.g., a password change endpoint)
+            if (!string.IsNullOrEmpty(labDetailsDTO.PasswordHash))
+            {
+                // Encrypt the new password before saving
+                lab.PasswordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(labDetailsDTO.PasswordHash);
+            }
+
+            // Step 6: Save the updated lab
+            await _repository.UpdateAsync(lab);
+
+            // Step 7: Return the updated lab data (optionally map back to DTO for response)
+            var updatedLabDto = _mapper.Map<LabsDTO>(lab);
+            return Ok(updatedLabDto);
+        }
+
     }
 }
