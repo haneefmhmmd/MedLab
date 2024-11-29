@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using medLab.Models;
 using medLab.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace medLab.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class LabsController : ControllerBase
     {
         private readonly ILabRepository _repository;
