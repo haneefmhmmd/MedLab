@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.JsonPatch;
+using Newtonsoft.Json;
+
 
 namespace medLab.Controllers
 {
@@ -28,7 +31,7 @@ namespace medLab.Controllers
 
         // GET: /report/{labId}
         [HttpGet("{labId}")]
-        public async Task<IActionResult> GetReportsForLab(string labId)
+        public async Task<IActionResult> GetAllReports(string labId)
         {
             var lab = await _labRepository.GetByIdAsync(labId);
             if (lab == null)
@@ -39,28 +42,6 @@ namespace medLab.Controllers
 
             var reportDtos = _mapper.Map<List<ReportDTO>>(lab.Reports);
             return Ok(reportDtos);
-        }
-
-        // POST: /report/{labId}
-        [HttpPost("{labId}")]
-        public async Task<IActionResult> AddReportToLab(string labId, [FromBody] ReportDTO reportDto)
-        {
-            var lab = await _labRepository.GetByIdAsync(labId);
-            if (lab == null)
-            {
-                _logger.LogWarning($"Lab with ID {labId} not found.");
-                return NotFound($"Lab with ID {labId} not found.");
-            }
-
-            var report = _mapper.Map<Report>(reportDto);
-            report.ReportId = Guid.NewGuid().ToString(); // Assign unique ReportId
-            lab.Reports.Add(report);
-
-            await _labRepository.UpdateAsync(lab);
-            _logger.LogInformation($"Report added for Lab ID: {labId}, Report ID: {report.ReportId}.");
-
-            var savedReportDto = _mapper.Map<ReportDTO>(report);
-            return CreatedAtAction(nameof(GetReportsForLab), new { labId }, savedReportDto);
         }
 
         // GET: /report/{labId}/{reportId}
@@ -85,6 +66,27 @@ namespace medLab.Controllers
             return Ok(reportDto);
         }
 
+        // POST: /report/{labId}
+        [HttpPost("{labId}")]
+        public async Task<IActionResult> AddReportToLab(string labId, [FromBody] ReportDTO reportDto)
+        {
+            var lab = await _labRepository.GetByIdAsync(labId);
+            if (lab == null)
+            {
+                _logger.LogWarning($"Lab with ID {labId} not found.");
+                return NotFound($"Lab with ID {labId} not found.");
+            }
+
+            var report = _mapper.Map<Report>(reportDto);
+            report.ReportId = Guid.NewGuid().ToString(); // Assign unique ReportId
+            lab.Reports.Add(report);
+
+            await _labRepository.UpdateAsync(lab);
+            _logger.LogInformation($"Report added for Lab ID: {labId}, Report ID: {report.ReportId}.");
+
+            var savedReportDto = _mapper.Map<ReportDTO>(report);
+            return CreatedAtAction(nameof(GetAllReports), new { labId }, savedReportDto);
+        }
 
         // PUT: /report/{labId}/{reportId}
         [HttpPut("{labId}/{reportId}")]
@@ -156,5 +158,48 @@ namespace medLab.Controllers
 
             return NoContent();
         }
+
+
+
+        [HttpPatch("{labId}/{reportId}")]
+        public async Task<IActionResult> UpdateReportWithPatch(string labId, string reportId, [FromBody] JsonPatchDocument<PatientDetailsDTO> patchDocument)
+        {
+            var lab = await _labRepository.GetByIdAsync(labId);
+            if (lab == null)
+            {
+                _logger.LogWarning($"Lab with ID {labId} not found.");
+                return NotFound($"Lab with ID {labId} not found.");
+            }
+
+            var report = lab.Reports.FirstOrDefault(r => r.ReportId == reportId);
+            if (report == null)
+            {
+                _logger.LogWarning($"Report with ID {reportId} not found.");
+                return NotFound($"Report with ID {reportId} not found.");
+            }
+            var patientDetails = _mapper.Map<PatientDetailsDTO>(report);
+            _logger.LogDebug($"Initial patientDetails: {JsonConvert.SerializeObject(patientDetails)}");
+
+            patchDocument.ApplyTo(patientDetails); // Apply patch without ModelState adapter
+
+            // Validate the patch
+            if (!TryValidateModel(patientDetails))
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Apply the changes to the report object
+            report.PatientName = patientDetails.PatientName;
+            report.Age = patientDetails.Age ?? 0;  // Handle nullable Age
+            report.Gender = patientDetails.Gender;
+            report.DateOfTest = patientDetails.DateOfTest;
+
+            await _labRepository.UpdateAsync(lab);
+            _logger.LogInformation($"Report updated using PATCH for Lab ID: {labId}, Report ID: {reportId}.");
+
+            var updatedReportDto = _mapper.Map<ReportDTO>(report);
+            return Ok(updatedReportDto);
+        }
+
     }
 }

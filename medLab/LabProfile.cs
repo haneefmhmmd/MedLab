@@ -45,6 +45,13 @@ namespace medLab
                 .ForMember(dest => dest.LabName, opt => opt.MapFrom(src => src.LabName))
                 .ReverseMap();
 
+            // New mapping for PatientDetailsDTO <-> Report (patient details in the report)
+            CreateMap<PatientDetailsDTO, Report>()
+                .ForMember(dest => dest.PatientName, opt => opt.MapFrom(src => src.PatientName))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.Age))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
+                .ForMember(dest => dest.DateOfTest, opt => opt.MapFrom(src => src.DateOfTest))
+                .ReverseMap();
 
         }
     }

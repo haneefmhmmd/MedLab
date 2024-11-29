@@ -42,7 +42,8 @@ namespace medLab
             });
 
             // Add services to the container
-            builder.Services.AddControllers();
+            // builder.Services.AddControllers();
+            builder.Services.AddControllers().AddNewtonsoftJson();
             builder.Services.AddEndpointsApiExplorer();
 
             // Add Swagger services

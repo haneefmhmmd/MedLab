@@ -4,7 +4,7 @@
     {
         public string LabId { get; set; }
         public string LabEmail { get; set; }
-        public string PasswordHash {  get; set; }
+        public string PasswordHash { get; set; }
         public string LabAddress { get; set; }
         public string LabName { get; set; }
         public List<ReportDTO> Reports { get; set; } = new List<ReportDTO>();
@@ -40,4 +40,14 @@
         public string LabEmail { get; set; }
         public string PasswordHash { get; set; }
     }
+
+    public class PatientDetailsDTO
+    {
+        public string PatientName { get; set; }
+        public int? Age { get; set; }
+        public string Gender { get; set; }
+        public string DateOfTest { get; set; }
+    }
+
+
 }
