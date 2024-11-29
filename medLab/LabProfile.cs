@@ -3,6 +3,7 @@ using AutoMapper;
 using AutoMapperProfile = AutoMapper.Profile;
 using medLab.Models;
 using Amazon.DynamoDBv2.DataModel;
+using medLab.Models.DTOs;
 
 namespace medLab
 {
@@ -36,6 +37,19 @@ namespace medLab
                 .ForMember(dest => dest.TestValue, opt => opt.MapFrom(src => src.TestValue))
                 .ReverseMap();
 
+            // Mapping for Test <-> TestDTO within LabTests model
+            CreateMap<LabTestDTO, LabTest>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Unit, opt => opt.MapFrom(src => src.Unit))
+                .ForMember(dest => dest.ReferenceValue, opt => opt.MapFrom(src => src.ReferenceValue))
+                .ReverseMap();
+
+            CreateMap<LabTests, LabTestsDTO>()
+                .ForMember(dest => dest.LabId, opt => opt.MapFrom(src => src.LabId))
+                .ForMember(dest => dest.Tests, opt => opt.MapFrom(src => src.Tests))
+                .ReverseMap();
+
 
             CreateMap<RegistrationDTO, Labs>()
                 .ForMember(dest => dest.LabId, opt => opt.MapFrom(src => src.LabId))
@@ -52,7 +66,6 @@ namespace medLab
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
                 .ForMember(dest => dest.DateOfTest, opt => opt.MapFrom(src => src.DateOfTest))
                 .ReverseMap();
-
         }
     }
 }

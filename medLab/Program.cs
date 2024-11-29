@@ -26,6 +26,7 @@ namespace medLab
 
             // Add the repository
             builder.Services.AddScoped<ILabRepository, LabRepository>();
+            builder.Services.AddScoped<ITestRepository, TestRepository>();
 
             // Configure JWT authentication
             ConfigureAuthentication(builder);
