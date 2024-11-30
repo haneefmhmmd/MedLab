@@ -1,7 +1,11 @@
+using Amazon;
+using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.Runtime;
 using medLab.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace medLab.Repositories
 {
@@ -9,10 +13,27 @@ namespace medLab.Repositories
     public class TestRepository : ITestRepository
     {
         private readonly IDynamoDBContext _context;
+        private readonly AmazonDynamoDBClient _dynamoDbClient;
 
         public TestRepository(IDynamoDBContext context)
         {
-            _context = context;
+            var configuration = LoadConfiguration();
+            var awsAccessKey = configuration["AWSCredentials:AccessKeyID"];
+            var awsSecretKey = configuration["AWSCredentials:SecretAccessKey"];
+
+            var credentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
+            _dynamoDbClient = new AmazonDynamoDBClient(credentials, RegionEndpoint.USEast1);
+
+            _context = new DynamoDBContext(_dynamoDbClient);
+        }
+
+        private IConfiguration LoadConfiguration()
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+            return builder.Build();
         }
 
         public async Task<LabTests> GetTestsByLabIdAsync(string labId)
